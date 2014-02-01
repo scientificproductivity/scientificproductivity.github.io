@@ -1,0 +1,268 @@
+---
+layout: post
+title: "First Attemptes"
+description: "This serves to figure out how to det the makrdown format reports published on github hosted blog."
+category: 
+tags: [knitr,github,markdown,reproducable,blog]
+published: false
+status: process
+---
+
+
+
+```{r setup, cache = F, echo = F, message = F,include=F,results='hide', warning = F, tidy = F}
+# make this an external chunk that can be included in any file
+opts_chunk$set(message = T, error = T, warning = T, comment = NA, fig.align = 'center', dev=c("CairoPNG","CairoSVG"),
+  		   dpi = 96, tidy = F, cache = F,echo=F,include=F, cache.path = '.cache/',
+			   fig.path = 'fig/',fig.height=5,fig.width=10, par(pch=19))
+
+options(xtable.type = 'html', width=68,digits=1, show.signif.stars=FALSE)
+
+# Evaluate the figure caption after the plot
+opts_knit$set(eval.after='fig.cap')
+
+# Avoid including base64_images - this only 
+# works with the .RProfile setup
+options(base64_images = "none")
+
+# Use the table counter that the htmlTable() provides
+options(table_counter = TRUE)
+
+# Use the figure counter that we declare below
+options(figure_counter = TRUE)
+# Use roman letters (I, II, III, etc) for figures
+#options(figure_counter_roman = TRUE)
+
+# Adding the next figure number
+getNextFigureNo <- function() as.character(as.numeric(options("figure_counter")))
+# Adding the previous figure number
+getPrevFigureNo <- function() as.character(as.numeric(options("figure_counter"))-1)
+
+# Add a figure counter function
+knit_hooks$set(plot = function(x, options) {
+  fig_fn = paste0(opts_knit$get("base.url"), 
+                  paste(x, collapse = "."))
+ 
+  # Some stuff from the default definition
+  fig.cap <- knitr:::.img.cap(options)
+ 
+  # Style and additional options that should be included in the img tag
+  style=c("display: block",
+          sprintf("margin: %s;",
+                   switch(options$fig.align, 
+                          left = 'auto auto auto 0', 
+                          center = 'auto',
+                          right = 'auto 0 auto auto')))
+  # Certain arguments may not belong in style, 
+  # for instance the width and height are usually
+  # outside if the do not have a unit specified
+  addon_args = ""
+ 
+  # This is perhaps a little overly complicated prepared 
+  # with the loop but it allows for a more out.parameters if necessary
+  if (any(grepl("^out.(height|width)", names(options)))){
+      on <- names(options)[grep("^out.(height|width)", names(options))]
+      for(out_name in on){
+          dimName <- substr(out_name, 5, nchar(out_name))
+          if (grepl("[0-9]+(em|px|%|pt|pc|in|cm|mm)", out_name))
+              style=append(style, paste0(dimName, ": ", options[[out_name]]))
+          else if (length(options$out.width) > 0)
+              addon_args = paste0(addon_args, dimName, "='", options[[out_name]], "'")
+      }
+  }
+ 
+  # Add counter if wanted
+  fig_number_txt <- ""
+  cntr <- getOption("figure_counter", FALSE)
+  if (cntr != FALSE){
+    if (is.logical(cntr))
+      cntr <- 1
+    # The figure_counter_str allows for custom 
+    # figure text, you may for instance want it in
+    # bold: <b>Figure %s:</b>
+    # The %s is so that you have the option of setting the
+    # counter manually to 1a, 1b, etc if needed
+    fig_number_txt <- 
+      sprintf(getOption("figure_counter_str", "Figure %s: "), 
+              ifelse(getOption("figure_counter_roman", FALSE), 
+                     as.character(as.roman(cntr)), as.character(cntr)))
+ 
+    if (is.numeric(cntr))
+      options(figure_counter = cntr + 1)
+  }
+ 
+  # Put it all together
+  paste0("<figure><img src='", fig_fn, "'", 
+         " ", addon_args,
+         paste0(" style='", paste(style, collapse="; "), "'"),
+         ">",
+         "<figcaption>", fig_number_txt, fig.cap, "</figcaption></figure>")
+})
+
+knit_hooks$set(inline = function(x) {
+  if(is.numeric(x)) {
+    round(x, getOption('digits'))
+  } else {
+    paste(as.character(x), collapse = ', ')
+  }
+})
+
+library(knitr); library(knitcitations)
+bib <- read.bibtex("rrmda.bib")
+cite_options(tooltip = FALSE, linked = TRUE,
+    numerical = TRUE, bibtex_data = FALSE)
+#
+#Reading in your own bib file:
+#bib <- read.bibtex(file.path(getwd(), "Presentation", basename(getOption("bib.loc"))))
+#cite in text using `r citet(bib[1])`
+```
+
+```{r mainLibr}
+
+library(Hmisc)
+library(reshape)
+library(survival)
+require(openintro)
+library(car)
+library(psych)
+library(ggplot2)
+library(lattice)
+require(mosaic)
+require(xtable)
+library(RColorBrewer)
+library(rms) # I use the cox regression from this package
+library(boot) # The melanoma data set is used in this exampe
+library(Gmisc) # Stuff I find convenient
+trellis.par.set(theme=col.mosaic())  # get a better color scheme for lattice
+source("~/Dropbox/R_Scripts/glob_r_scr/print_pval.R")
+source("~/Dropbox/R_Scripts/glob_r_scr/median_range.R")
+
+```
+
+
+```{r loadData}
+source("code/data_prep.R")
+```
+
+```{r Versions}
+sessionInfo()
+```
+
+This is a Reproducable researche Rmarkdow example: Mortalty in USA Hospitals
+========================================================
+
+
+
+**Abstract**
+
+
+__Objective__
+Create a reproducable research article with Rmarkdown and share it.  
+
+__Methods__
+I will be using data from [Medicare](http://hospitalcompare.hhs.gov) which contains two datasets
+
+
+1. This table provides general Hospital information in response to a Hospital Compare search.
+2. The Outcome of Care Measures nationwide (USA).
+
+
+The codebook is provided and will be avalable as supplimentary file. 
+I will be using Knitr `r citep(bib["knitr_man"])` for Rmarkdown compilation.
+
+__Results__
+
+
+__Conlutions__
+
+Introduction
+------------
+
+
+Material and methods
+------------
+This is the first table __Table__ 1.
+
+
+
+
+Results
+------------
+See next Figure `r getNextFigureNo()`.
+
+
+
+
+
+
+```{r plot1, fig.height=3, fig.width=9,include=TRUE, fig.cap="A histogram and density estimates for three outcomes."}
+cols <- brewer.pal(9,"Blues")
+pal <- colorRampPalette(cols)
+par(mfrow=c(1,3))
+hist(outcome[,11],xlab="30-day Death Rate",
+     main=substitute(bar(X)==k,list(k=mean(outcome[,11],na.rm=TRUE))),
+     xlim=c(0,20),ylim=c(0,0.3),prob=TRUE,col=pal(20))
+lines(density(outcome[,11],na.rm=TRUE),col="red")             # add a density estimate with defaults
+abline(v=median(outcome[,11],na.rm=TRUE),col="blue")
+abline(h=0)
+hist(outcome[,17],xlab="30-day Death Rate",
+     main=substitute(bar(X)==k,list(k=mean(outcome[,17],na.rm=TRUE))),
+     xlim=c(0,20),ylim=c(0,0.3),prob=TRUE,col=pal(20))
+lines(density(outcome[,17],na.rm=TRUE),col="red") 
+abline(v=median(outcome[,17],na.rm=TRUE),col="blue")
+abline(h=0)
+hist(outcome[,23],xlab="30-day Death Rate",
+     main=substitute(bar(X)==k,list(k=mean(outcome[,23],na.rm=TRUE))),
+     xlim=c(0,20),ylim=c(0,0.3),prob=TRUE,col=pal(20))
+lines(density(outcome[,23],na.rm=TRUE),col="red") 
+abline(v=median(outcome[,23],na.rm=TRUE),col="blue")
+abline(h=0)
+```
+
+As you can deduce from the Figure `r getNextFigureNo()`.
+
+```{r plot2, fig.height=6, fig.width=7,include=TRUE, fig.cap="A boxplot of median moratlity accross the regeons."}
+outcome2 <- outcome[!(outcome$State %in% names(table(outcome$State)[table(outcome$State)<20])),]
+death <- outcome2[, 11]
+state <- outcome2$State
+par(las=2,cex.axis=0.8)
+state.median<-reorder(state,death, na.rm=T,median)
+par(las=2,cex.axis=0.8)
+state.median<-reorder(state,death, na.rm=T,median)
+boxplot(death ~ state.median,ylab="30-day Death Rate",main="Heart Attack 30-day Death Rate by State",xaxt="n")
+labs <- paste0(names(table(state.median)),"(",as.numeric(table(state.median)),")")
+axis(side=1,at=1:length(levels(state.median)),lab=FALSE)
+text(1:length(levels(state.median)),par("usr")[3] - 1.5,srt=90, labels=labs, xpd=T, cex=0.7)
+```
+
+There is previous image here Figure `r getPrevFigureNo()`.
+
+
+And yet another image Figure `r getNextFigureNo()`.
+```{r plot3, fig.height=6, fig.width=12,include=TRUE, fig.cap="A scatterplot of death rate by number of the patients and hospital owner."}
+xyplot(death~npatient|owner,
+panel=function(x,y,...){
+  panel.xyplot(x,y,...)
+	panel.lmline(x,y,...)
+},
+xlab="Number of Patients Seen",ylab="30-day Death Rate",
+main="Heart Attack 30-day Death Rate by Ownership")
+```
+
+
+
+
+Discussion
+------------
+
+
+
+
+
+Supplimentary files
+------------
+Data files and codebooe are avalable [here](https://dl.dropboxusercontent.com/u/530192/public_data/DataMedicareMeasuresHospitals.zip).
+
+
+
+
